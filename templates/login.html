@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>用户登录</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    height: 100vh;
+
+    /* ✅ 和 register 完全一致 */
+    background: url("https://images.unsplash.com/photo-1504711434969-e33886168f5c") no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+/* 渐变遮罩（完全一致） */
+body::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        rgba(20,40,70,0.5) 0%,
+        rgba(20,40,70,0.4) 40%,
+        rgba(20,40,70,0.85) 100%
+    );
+}
+
+/* 布局 */
+.container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    height: 100%;
+}
+
+/* 左侧（完全一致） */
+.left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 120px;
+    color: white;
+}
+
+/* 标题 */
+.left h1 {
+    font-size: 80px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+
+    text-shadow: 0 6px 25px rgba(0,0,0,0.5);
+    transform: translateY(-40px);
+}
+
+/* 副标题 */
+.left p {
+    font-size: 20px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.8;
+    transform: translateY(-30px);
+}
+
+/* 右侧 */
+.right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 卡片（完全一致） */
+.box {
+    width: 460px;
+    padding: 55px 45px;
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    text-align: center;
+    color: white;
+}
+
+/* 标题 */
+.box h2 {
+    margin-bottom: 30px;
+    font-size: 26px;
+}
+
+.box h2 i {
+    margin-right: 10px;
+    color: #3A7AFE;   /* 科技蓝统一 */
+}
+
+/* 输入框 */
+.input-box {
+    position: relative;
+    margin: 15px 0;
+}
+
+.input-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+}
+
+input {
+    width: 100%;
+    padding: 14px 14px 14px 45px;
+    border-radius: 10px;
+    border: none;
+    outline: none;
+    font-size: 15px;
+
+    background: rgba(255,255,255,0.9);
+    box-sizing: border-box;
+}
+
+/* 按钮（完全一致） */
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+
+    background: linear-gradient(135deg, #3A7AFE, #5A9BFF);
+    color: white;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(58,122,254,0.4);
+}
+
+/* 链接 */
+a {
+    display: block;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #cfe3ff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- 左侧（完全复用） -->
+    <div class="left">
+        <h1>新闻分类系统</h1>
+        <p>
+            基于 BERT 的智能分类平台<br>
+            支持分类统计与词云分析
+        </p>
+    </div>
+
+    <!-- 右侧 -->
+    <div class="right">
+        <div class="box">
+
+            <h2><i class="fas fa-user-lock"></i> 登录</h2>
+
+            <form method="post">
+
+                <div class="input-box">
+                    <i class="fas fa-user"></i>
+                    <input name="username" placeholder="用户名" required>
+                </div>
+
+                <div class="input-box">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="密码" required>
+                </div>
+
+                <button type="submit">登录</button>
+
+            </form>
+
+            <a href="/register">没有账号？去注册</a>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

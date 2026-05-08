@@ -1,0 +1,46 @@
+{
+  "sites": [
+    {
+      "name": "新浪新闻",
+      "url": "https://news.sina.com.cn/",
+      "article_selector": "a",
+      "base_url": "https://news.sina.com.cn"
+    },
+    {
+      "name": "网易新闻",
+      "url": "https://news.163.com/",
+      "article_selector": "a",
+      "base_url": "https://news.163.com"
+    },
+    {
+      "name": "新华网",
+      "url": "http://www.xinhuanet.com/",
+      "article_selector": "a",
+      "base_url": "http://www.xinhuanet.com"
+    },
+    {
+      "name": "人民网",
+      "url": "http://www.people.com.cn/",
+      "article_selector": "a",
+      "base_url": "http://www.people.com.cn"
+    },
+    {
+      "name": "央视新闻",
+      "url": "https://news.cctv.com/",
+      "article_selector": "a",
+      "base_url": "https://news.cctv.com"
+    },
+    {
+      "name": "中国新闻网",
+      "url": "https://www.chinanews.com/",
+      "article_selector": "a",
+      "base_url": "https://www.chinanews.com"
+    },
+    {
+      "name": "环球网",
+      "url": "https://www.huanqiu.com/",
+      "article_selector": "a",
+      "base_url": "https://www.huanqiu.com"
+    }
+  ]
+}

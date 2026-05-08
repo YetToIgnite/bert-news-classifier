@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>{{ category }} 词云</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial;
+    background: #f5f7fb;
+}
+
+/* 布局 */
+.layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* ⭐ 左侧栏（统一版） */
+.sidebar {
+    width: 220px;
+    background: #111827;
+    color: white;
+    padding: 25px 15px;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 18px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #bbb;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.sidebar a i {
+    margin-right: 10px;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: #4CAF50;
+    color: white;
+}
+
+/* 主区域 */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 顶部栏 */
+.topbar {
+    height: 60px;
+    background: white;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* 内容 */
+.content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 卡片 */
+.container {
+    background: white;
+    width: 800px;
+    max-width: 85%;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0px 20px 50px rgba(0,0,0,0.15);
+    text-align: center;
+}
+
+/* 标题 */
+.container h2 {
+    margin-bottom: 20px;
+}
+
+.container h2 i {
+    margin-right: 10px;
+    color: #4CAF50;
+}
+
+/* 图片 */
+img {
+    max-width: 90%;
+    margin-top: 10px;
+    border-radius: 10px;
+    box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
+}
+
+/* 按钮区 */
+.links {
+    margin-top: 30px;
+}
+
+.links a {
+    margin: 0 10px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: #4CAF50;
+    color: white;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.links a:hover {
+    background: #45a049;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+<!-- ⭐ 左侧栏（统一 + 动态高亮） -->
+
+<div class="sidebar">
+    <h2>新闻系统</h2>
+
+<a href="/" class="{% if active=='home' %}active{% endif %}">
+    <i class="fas fa-home"></i> 首页
+</a>
+
+<a href="/news_page" class="{% if active=='news' %}active{% endif %}">
+    <i class="fas fa-newspaper"></i> 新闻
+</a>
+
+<a href="/history" class="{% if active=='history' %}active{% endif %}">
+    <i class="fas fa-clock"></i> 历史
+</a>
+
+<a href="/stats_page" class="{% if active=='stats' %}active{% endif %}">
+    <i class="fas fa-chart-bar"></i> 统计
+</a>
+
+<a href="/wordcloud_page" class="{% if active=='wordcloud' %}active{% endif %}">
+    <i class="fas fa-cloud"></i> 词云
+</a>
+
+</div>
+
+<!-- 主体 -->
+
+<div class="main">
+
+<!-- 顶部 -->
+<div class="topbar">
+    <h3>{{ category }} 词云</h3>
+    <div>📊 文本可视化分析</div>
+</div>
+
+<!-- 内容 -->
+<div class="content">
+
+    <div class="container">
+
+        <h2><i class="fas fa-cloud"></i> {{ category }} 热点词云</h2>
+
+        <!-- 词云图 -->
+        <img src="{{ img_path }}" alt="{{ category }} 词云">
+
+        <!-- 操作 -->
+        <div class="links">
+            <a href="/wordcloud_page">返回选择</a>
+            <a href="/">返回首页</a>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
