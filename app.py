@@ -372,14 +372,18 @@ def show_wordcloud(category):
 # ======================
 @app.route("/sites")
 def get_sites():
-    db = get_db()
-    cursor = db.cursor()
-    # 彻底告别 config.json，只拉取启用的爬虫
-    cursor.execute("SELECT site_name as name, target_url as url FROM spider_config WHERE status=1")
-    sites = cursor.fetchall()
-    cursor.close()
-    db.close()
-    return jsonify(sites)
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        # 只返回启用的站点，供前端新闻采集页面渲染多选框
+        cursor.execute("SELECT site_name as name, target_url as url FROM spider_config WHERE status=1")
+        sites = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return jsonify(sites)
+    except Exception as e:
+        print("获取站点列表失败:", e)
+        return jsonify([])
 
 
 # ======================

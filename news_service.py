@@ -13,14 +13,38 @@ from db import get_db
 # =========================
 def run_news_pipeline(selected_sites=None, progress_callback=None):
     # =========================
-    # 读取配置
+    # 🌟 核心升级：从 MySQL 动态读取配置，彻底废弃 config.json
     # =========================
-    with open("crawler/config.json", "r", encoding="utf-8") as f:
-        config = json.load(f)
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        # 仅拉取管理员后台设置为“启用” (status=1) 的站点
+        cursor.execute("SELECT * FROM spider_config WHERE status=1")
+        db_sites = cursor.fetchall()
+        cursor.close()
+        db.close()
+    except Exception as e:
+        print("读取数据库爬虫配置失败:", e)
+        return {}
 
-    sites = config["sites"]
+    # 将数据库字段映射为 crawler.py 需要的字典格式
+    sites = []
+    for row in db_sites:
+        sites.append({
+            "name": row["site_name"],
+            "url": row["target_url"],
+            "base_url": row["base_url"] if row.get("base_url") else row["target_url"],
+            "article_selector": row["article_selector"] if row.get("article_selector") else "a"
+        })
+
+    # 根据前端勾选的站点进行过滤
     if selected_sites:
         sites = [s for s in sites if s["name"] in selected_sites]
+
+    if not sites:
+        if progress_callback:
+            progress_callback({"site": "错误：未匹配到任何启用的爬虫任务", "status": "done", "progress": 100})
+        return {}
 
     all_news = []
 

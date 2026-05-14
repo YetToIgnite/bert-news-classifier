@@ -47,14 +47,16 @@ def init_config_tables():
         is_active TINYINT DEFAULT 1 COMMENT '1:显示, 0:隐藏'
     )''')
 
-    # 2. 新建爬虫动态配置表
+    # 2. 新建爬虫动态配置表 (扩充了基准网址与规则)
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS spider_config (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        site_name VARCHAR(100) NOT NULL,
-        target_url TEXT NOT NULL,
-        status TINYINT DEFAULT 1 COMMENT '1:启用, 0:停用'
-    )''')
+        CREATE TABLE IF NOT EXISTS spider_config (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            site_name VARCHAR(100) NOT NULL,
+            target_url TEXT NOT NULL,
+            base_url TEXT,
+            article_selector VARCHAR(100) DEFAULT 'a',
+            status TINYINT DEFAULT 1 COMMENT '1:启用, 0:停用'
+        )''')
 
     # 3. 写入默认分类（如果表为空）
     cursor.execute("SELECT COUNT(*) as cnt FROM category_dict")
@@ -63,11 +65,13 @@ def init_config_tables():
         for cat in categories:
             cursor.execute("INSERT INTO category_dict (category_name, is_active) VALUES (%s, 1)", (cat,))
 
-    # 4. 写入默认爬虫网址（如果表为空，替代原本的 config.json）
+    # 4. 写入默认爬虫网址
     cursor.execute("SELECT COUNT(*) as cnt FROM spider_config")
     if cursor.fetchone()['cnt'] == 0:
-        cursor.execute("INSERT INTO spider_config (site_name, target_url, status) VALUES (%s, %s, 1)",
-                       ('新浪滚动新闻', 'https://news.sina.com.cn/roll/'))
+        cursor.execute(
+                "INSERT INTO spider_config (site_name, target_url, base_url, article_selector, status) VALUES (%s, %s, %s, %s, %s)",
+                ('新浪滚动', 'https://news.sina.com.cn/roll/', 'https://news.sina.com.cn/', 'ul.list_009 li a', 1)
+            )
 
     conn.commit()
     cursor.close()
