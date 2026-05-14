@@ -3,6 +3,7 @@ from importlib import import_module
 import torch.nn.functional as F
 import pymysql
 from datetime import datetime
+from db import get_db
 
 # ======================
 # 模型加载
@@ -35,17 +36,6 @@ label_map = {
     'entertainment': '娱乐'
 }
 
-# ======================
-# 数据库连接
-# ======================
-def get_db():
-    return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='你的密码',   # ⚠️ 改成你的
-        database='news_system',
-        charset='utf8mb4'
-    )
 
 # ======================
 # 保存记录

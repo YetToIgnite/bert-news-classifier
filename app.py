@@ -10,9 +10,12 @@ import os
 import json
 from db import get_db
 from predict import predict, save_record
+from werkzeug.security import generate_password_hash, check_password_hash
+import pymysql.cursors # 确保引入了 cursors 用于字典格式读取
 
 app = Flask(__name__)
 app.secret_key = '123456'
+
 
 # ======================
 # 注册
@@ -33,7 +36,10 @@ def register():
         if cursor.fetchone():
             return "用户名已存在"
 
-        cursor.execute("INSERT INTO user (username, password) VALUES (%s, %s)", (username, password))
+        # 🌟 核心修改：对密码进行哈希加密，不存明文
+        hashed_pwd = generate_password_hash(password)
+
+        cursor.execute("INSERT INTO user (username, password) VALUES (%s, %s)", (username, hashed_pwd))
         db.commit()
 
         cursor.close()
@@ -54,19 +60,22 @@ def login():
         password = request.form.get('password')
 
         db = get_db()
+        # 🌟 使用 DictCursor 方便我们通过字段名获取密码
         cursor = db.cursor()
 
-        cursor.execute("SELECT * FROM user WHERE username=%s AND password=%s", (username, password))
+        # 🌟 核心修改：只用用户名去查数据库
+        cursor.execute("SELECT * FROM user WHERE username=%s", (username,))
         user = cursor.fetchone()
 
         cursor.close()
         db.close()
 
-        if user:
+        # 🌟 核心修改：用 check_password_hash 校验输入的密码与数据库里的哈希值是否匹配
+        if user and check_password_hash(user['password'], password):
             session['user'] = username
             return redirect('/')
         else:
-            return "登录失败"
+            return "账号或密码错误" # 模糊提示，增加安全性
 
     return render_template('login.html')
 
