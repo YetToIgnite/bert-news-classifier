@@ -16,6 +16,27 @@ import pymysql.cursors # 确保引入了 cursors 用于字典格式读取
 app = Flask(__name__)
 app.secret_key = '123456'
 
+# ======================
+# ⭐ 全局动态菜单与权限拦截 (新增)
+# ======================
+@app.context_processor
+def inject_globals():
+    dynamic_categories = []
+    is_admin = False
+    if 'user' in session:
+        is_admin = (session['user'] == 'admin')  # 判断是否为超级管理员
+        try:
+            db = get_db()
+            cursor = db.cursor()
+            # 动态拉取激活的分类
+            cursor.execute("SELECT * FROM category_dict WHERE is_active=1 ORDER BY id")
+            dynamic_categories = cursor.fetchall()
+            cursor.close()
+            db.close()
+        except:
+            pass
+    return dict(dynamic_categories=dynamic_categories, is_admin=is_admin)
+
 
 # ======================
 # 注册
@@ -285,14 +306,22 @@ def stats():
         return jsonify({'labels': [], 'values': []})
 
 
+# ======================
+# ⭐ 词云页面 (改为动态分类)
+# ======================
 @app.route('/wordcloud_page')
 def wordcloud_page():
     if 'user' not in session:
         return redirect('/login')
 
-    categories = ["财经", "房产", "股票", "教育", "科学", "社会", "政治", "体育", "游戏", "娱乐"]
-    return render_template("wordcloud_page.html", categories=categories)
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT category_name FROM category_dict WHERE is_active=1")
+    categories = [row['category_name'] for row in cursor.fetchall()]
+    cursor.close()
+    db.close()
 
+    return render_template("wordcloud_page.html", categories=categories)
 
 # ======================
 # 词云
@@ -339,13 +368,18 @@ def show_wordcloud(category):
 
 
 # ======================
-# ⭐ 获取网站列表
+# ⭐ 获取网站列表 (改为从数据库读取)
 # ======================
 @app.route("/sites")
 def get_sites():
-    with open("crawler/config.json", "r", encoding="utf-8") as f:
-        config = json.load(f)
-    return jsonify(config["sites"])
+    db = get_db()
+    cursor = db.cursor()
+    # 彻底告别 config.json，只拉取启用的爬虫
+    cursor.execute("SELECT site_name as name, target_url as url FROM spider_config WHERE status=1")
+    sites = cursor.fetchall()
+    cursor.close()
+    db.close()
+    return jsonify(sites)
 
 
 # ======================
@@ -494,6 +528,37 @@ def recommend():
     finally:
         cursor.close()
         db.close()
+
+
+# ======================
+# ⭐ 管理员后台与动态配置接口 (新增)
+# ======================
+@app.route('/admin')
+def admin_dashboard():
+    if session.get('user') != 'admin':
+        return "权限不足，仅系统管理员可访问！", 403
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM category_dict")
+    cats = cursor.fetchall()
+    cursor.execute("SELECT * FROM spider_config")
+    spiders = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return render_template('admin.html', cats=cats, spiders=spiders)
+
+
+@app.route('/admin/toggle_category/<int:id>', methods=['POST'])
+def toggle_category(id):
+    if session.get('user') != 'admin': return jsonify({'error': '无权限'}), 403
+    status = request.json.get('status')
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE category_dict SET is_active=%s WHERE id=%s", (status, id))
+    db.commit()
+    return jsonify({'msg': '分类状态已更新'})
 
 
 # ======================
