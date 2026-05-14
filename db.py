@@ -47,16 +47,26 @@ def init_config_tables():
         is_active TINYINT DEFAULT 1 COMMENT '1:显示, 0:隐藏'
     )''')
 
-    # 2. 新建爬虫动态配置表 (扩充了基准网址与规则)
+    # 2. 新建爬虫动态配置表 (保证表存在)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS spider_config (
             id INT AUTO_INCREMENT PRIMARY KEY,
             site_name VARCHAR(100) NOT NULL,
             target_url TEXT NOT NULL,
-            base_url TEXT,
-            article_selector VARCHAR(100) DEFAULT 'a',
             status TINYINT DEFAULT 1 COMMENT '1:启用, 0:停用'
         )''')
+
+    # 🌟 核心修复：自动检测旧版数据库结构并升级表字段
+    try:
+        # 尝试查询新加入的 base_url 和 article_selector 字段
+        cursor.execute("SELECT base_url, article_selector FROM spider_config LIMIT 1")
+    except Exception as e:
+        print("检测到旧版数据库结构，正在自动升级 spider_config 表...")
+        # 如果报错（说明没有这俩字段），则执行 ALTER TABLE 动态追加
+        cursor.execute("ALTER TABLE spider_config ADD COLUMN base_url TEXT AFTER target_url")
+        cursor.execute("ALTER TABLE spider_config ADD COLUMN article_selector VARCHAR(100) DEFAULT 'a' AFTER base_url")
+        conn.commit()
+        print("数据库表结构升级成功！")
 
     # 3. 写入默认分类（如果表为空）
     cursor.execute("SELECT COUNT(*) as cnt FROM category_dict")
@@ -65,12 +75,19 @@ def init_config_tables():
         for cat in categories:
             cursor.execute("INSERT INTO category_dict (category_name, is_active) VALUES (%s, 1)", (cat,))
 
-    # 4. 写入默认爬虫网址
+    # 4. 写入默认爬虫网址（如果表为空）
     cursor.execute("SELECT COUNT(*) as cnt FROM spider_config")
     if cursor.fetchone()['cnt'] == 0:
-        cursor.execute(
+        try:
+            cursor.execute(
                 "INSERT INTO spider_config (site_name, target_url, base_url, article_selector, status) VALUES (%s, %s, %s, %s, %s)",
                 ('新浪滚动', 'https://news.sina.com.cn/roll/', 'https://news.sina.com.cn/', 'ul.list_009 li a', 1)
+            )
+        except:
+            # 兼容老版插入
+            cursor.execute(
+                "INSERT INTO spider_config (site_name, target_url, status) VALUES (%s, %s, %s)",
+                ('新浪滚动', 'https://news.sina.com.cn/roll/', 1)
             )
 
     conn.commit()

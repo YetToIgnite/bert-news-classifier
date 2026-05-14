@@ -74,7 +74,25 @@
     </div>
 
 <script>
-// 之前 toggleCat 的代码保留，下面新增爬虫JS
+// ======================
+// 分类管理 JS
+// ======================
+function toggleCat(id, newStatus) {
+    fetch('/admin/toggle_category/' + id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status: newStatus})
+    }).then(res => res.json()).then(data => {
+        alert(data.msg);
+        location.reload();
+    }).catch(err => {
+        alert("操作失败，请确认后端正常运行！");
+    });
+}
+
+// ======================
+// 爬虫配置 JS
+// ======================
 function toggleSpider(id, newStatus) {
     fetch('/admin/toggle_spider/' + id, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -95,7 +113,10 @@ function addSpider() {
         base_url: document.getElementById('sp_base').value.trim() || document.getElementById('sp_url').value.trim(),
         article_selector: document.getElementById('sp_rule').value.trim() || "a"
     };
-    if(!payload.site_name || !payload.target_url) return alert('网站名称和目标URL必填！');
+
+    if(!payload.site_name || !payload.target_url) {
+        return alert('网站名称和目标URL必填！');
+    }
 
     fetch('/admin/spider/add', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -103,17 +124,8 @@ function addSpider() {
     }).then(res => res.json()).then(data => {
         alert(data.msg);
         location.reload();
-    });
-}
-</script>
-function toggleCat(id, newStatus) {
-    fetch('/admin/toggle_category/' + id, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({status: newStatus})
-    }).then(res => res.json()).then(data => {
-        alert(data.msg);
-        location.reload(); // 刷新页面看效果
+    }).catch(err => {
+        alert('添加失败，请检查网络或控制台报错');
     });
 }
 </script>
