@@ -564,6 +564,45 @@ def toggle_category(id):
     db.commit()
     return jsonify({'msg': '分类状态已更新'})
 
+# ======================
+# ⭐ 爬虫动态配置的 增、删、改 接口
+# ======================
+@app.route('/admin/spider/add', methods=['POST'])
+def add_spider():
+    if session.get('user') != 'admin': return jsonify({'error':'无权限'}), 403
+    data = request.json
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO spider_config (site_name, target_url, base_url, article_selector, status) 
+        VALUES (%s, %s, %s, %s, 1)
+    """, (data.get('site_name'), data.get('target_url'), data.get('base_url'), data.get('article_selector', 'a')))
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({'msg':'爬虫配置添加成功'})
+
+@app.route('/admin/spider/delete/<int:id>', methods=['POST'])
+def delete_spider(id):
+    if session.get('user') != 'admin': return jsonify({'error':'无权限'}), 403
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM spider_config WHERE id=%s", (id,))
+    db.commit()
+    cursor.close()
+    db.close()
+    return jsonify({'msg':'爬虫配置已删除'})
+
+@app.route('/admin/toggle_spider/<int:id>', methods=['POST'])
+def toggle_spider(id):
+    if session.get('user') != 'admin': return jsonify({'error':'无权限'}), 403
+    status = request.json.get('status')
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE spider_config SET status=%s WHERE id=%s", (status, id))
+    db.commit()
+    return jsonify({'msg':'状态已更新'})
+
 
 # ======================
 # 启动

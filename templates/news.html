@@ -2,315 +2,241 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>新闻Top10</title>
-
+<title>聚合新闻采集 - 新闻分类系统</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Segoe UI", Arial; background: #f5f7fb; }
+.layout { display: flex; height: 100vh; }
 
-body {
-    font-family: "Segoe UI", Arial;
-    background: #f5f7fb;
-}
-
-/* ⭐ 关键：和 index 完全一致 */
-.layout {
-    display: flex;
-    height: 100vh;
-}
-
-/* ⭐ sidebar 完全同步 index */
-.sidebar {
-    width: 220px;
-    background: #111827;
-    color: white;
-    padding: 25px 15px;
-}
-
-.sidebar h2 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 18px;  /* ⭐ index里有这个 */
-}
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    color: #bbb;
-    text-decoration: none;
-}
-
-.sidebar a i {
-    margin-right: 10px;
-}
-
-.sidebar a:hover,
-.sidebar a.active {
-    background: #4CAF50;
-    color: white;
-}
+/* 左侧导航 (与 index.html 保持一致) */
+.sidebar { width: 220px; background: #111827; color: white; padding: 25px 15px; overflow-y: auto; }
+.sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 18px; }
+.sidebar a { display: flex; align-items: center; padding: 12px; margin-bottom: 10px; border-radius: 8px; color: #bbb; text-decoration: none; }
+.sidebar a i { margin-right: 10px; }
+.sidebar a:hover, .sidebar a.active { background: #4CAF50; color: white; }
 
 /* 主区域 */
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
+.main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+.topbar { height: 60px; background: white; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.content { padding: 30px; }
 
-/* 顶部 */
-.topbar {
-    height: 60px;
-    background: white;
-    padding: 0 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
+/* 卡片面板 */
+.panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
+.panel h3 { margin-bottom: 15px; color: #333; display: flex; align-items: center; }
+.panel h3 i { margin-right: 10px; color: #4CAF50; }
 
-/* ⭐ 右侧滚动 */
-.content {
-    padding: 30px;
-    height: calc(100vh - 60px);
-    overflow-y: auto;
-}
+/* 按钮与进度条 */
+.btn-primary { padding: 10px 25px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+.btn-primary:hover { background: #45a049; }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
 
-/* 卡片 */
-.card {
-    background: white;
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
+.progress-container { width: 100%; background: #e0e0e0; border-radius: 8px; height: 20px; margin-top: 15px; overflow: hidden; display: none; }
+.progress-bar { height: 100%; background: #4CAF50; width: 0%; transition: width 0.3s ease; }
+.progress-text { margin-top: 8px; font-size: 13px; color: #666; font-weight: bold; }
 
-/* 网站选择 */
-.site-box {
-    margin-bottom: 20px;
-}
-
-.site-box label {
-    margin-right: 15px;
-}
-
-/* 按钮 */
-button {
-    padding: 10px 20px;
-    border-radius: 8px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-/* 进度条 */
-.progress {
-    margin: 15px 0;
-    display: none;
-}
-
-.progress-bar {
-    height: 20px;
-    background: #4CAF50;
-    border-radius: 10px;
-    text-align: center;
-    color: white;
-}
-
-/* 分类 */
-.category {
-    margin-top: 25px;
-}
-
-.category h3 {
-    margin-bottom: 10px;
-}
-
-/* 新闻卡片 */
-.news-card {
-    background: #f9fafb;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    transition: 0.2s;
-}
-
-.news-card:hover {
-    background: #eef7ff;
-}
-
-.news-title {
-    font-weight: bold;
-    cursor: pointer;
-    color: #2c3e50;
-}
-
-.news-title:hover {
-    color: #4CAF50;
-}
-
-.summary {
-    font-size: 13px;
-    color: #666;
-    margin-top: 5px;
-}
-
-.tag {
-    display: inline-block;
-    margin-top: 5px;
-    padding: 3px 8px;
-    background: #e8f5e9;
-    color: #4CAF50;
-    border-radius: 6px;
-    font-size: 12px;
-}
-
-/* 滚动条美化 */
-.content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.content::-webkit-scrollbar-thumb {
-    background: #4CAF50;
-    border-radius: 10px;
-}
+/* 新闻卡片网格 */
+.recommend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 15px; }
+.recommend-item { background: #f9fafb; padding: 15px; border-radius: 10px; transition: 0.3s; cursor: pointer; border: 1px solid #eee; }
+.recommend-item:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #4CAF50; }
+.recommend-item .label { font-size: 12px; background: #e8f5e9; color: #2e7d32; display: inline-block; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; }
+.recommend-item .title { font-size: 15px; color: #333; font-weight: bold; margin-bottom: 8px; line-height: 1.4; }
+.recommend-item .summary { font-size: 13px; color: #777; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
 </style>
-
 </head>
-
 <body>
 
 <div class="layout">
+    <div class="sidebar">
+        <h2>新闻系统</h2>
+        <a href="/"><i class="fas fa-home"></i> 首页</a>
+        <a href="/news_page" class="active"><i class="fas fa-newspaper"></i> 聚合新闻</a>
+        <a href="/history"><i class="fas fa-clock"></i> 历史足迹</a>
+        <a href="/stats_page"><i class="fas fa-chart-bar"></i> 数据大屏</a>
+        <a href="/wordcloud_page"><i class="fas fa-cloud"></i> 语义词云</a>
 
-<!-- ⭐ 左侧（已统一） -->
-<div class="sidebar">
-    <h2>新闻系统</h2>
-    <a href="/"><i class="fas fa-home"></i> 首页</a>
-    <a href="/news_page" class="active"><i class="fas fa-newspaper"></i> 新闻</a>
-    <a href="/history"><i class="fas fa-clock"></i> 历史</a>
-    <a href="/stats_page"><i class="fas fa-chart-bar"></i> 统计</a>
-    <a href="/wordcloud_page"><i class="fas fa-cloud"></i> 词云</a>
-</div>
+        <hr style="border-color: #333; margin: 15px 0;">
+        <div style="color: #888; font-size: 12px; margin-bottom: 10px; padding-left: 12px;">动态新闻标签</div>
+        {% for cat in dynamic_categories %}
+            <a href="/news_page?category={{ cat.category_name }}" style="font-size: 14px; padding: 8px 12px;">
+                <i class="fas fa-hashtag" style="color: #4CAF50;"></i> {{ cat.category_name }}
+            </a>
+        {% endfor %}
 
-<!-- 主体 -->
-<div class="main">
+        {% if is_admin %}
+        <hr style="border-color: #333; margin: 15px 0;">
+        <a href="/admin" style="color: #f59e0b; font-weight: bold;">
+            <i class="fas fa-user-shield"></i> 系统管理员后台
+        </a>
+        {% endif %}
+    </div>
 
-<div class="topbar">
-    <h3>新闻 Top10</h3>
-    <div>实时爬取 + 分类</div>
-</div>
+    <div class="main">
+        <div class="topbar">
+            <h3>多源新闻动态采集与 BERT 智能分类</h3>
+            <div class="user">
+                👤 {{ session['user'] }} | <a href="/logout" style="color:#d32f2f; text-decoration:none;">退出</a>
+            </div>
+        </div>
 
-<div class="content">
+        <div class="content">
+            <div class="panel">
+                <h3><i class="fas fa-sliders-h"></i> 1. 爬虫数据源配置</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">以下数据源由底层数据库动态驱动，请勾选需要采集的目标媒体：</p>
 
-<div class="card">
+                <div id="sites-container" style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px;">
+                    <span style="color:#888; font-size:14px;">正在加载可用数据源...</span>
+                </div>
 
-<div class="site-box" id="siteBox">
-    加载中...
-</div>
+                <button id="crawl-btn" class="btn-primary" onclick="startCrawl()">
+                    <i class="fas fa-satellite-dish"></i> 开始多线程抓取与智能分类
+                </button>
 
-<div class="progress" id="progressBox">
-    <div class="progress-bar" id="progressBar">0%</div>
-</div>
+                <div id="progress-container" class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div id="progress-text" class="progress-text"></div>
+            </div>
 
-<button onclick="loadNews()">开始抓取</button>
-
-<div id="news"></div>
-
-</div>
-
-</div>
-
-</div>
-
+            <div class="panel" id="result-panel" style="display: none;">
+                <h3><i class="fas fa-layer-group"></i> 2. 实时分类结果</h3>
+                <div id="news-results"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-
-// 加载网站
-function loadSites(){
-    fetch("/sites")
-    .then(res => res.json())
-    .then(data => {
-        let html = "<b>选择网站：</b><br><br>";
-        data.forEach(site => {
-            html += `<label><input type="checkbox" value="${site.name}" checked> ${site.name}</label>`;
+// ==========================================
+// 1. 页面加载时，自动从数据库获取启用的爬虫网址
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/sites')
+        .then(response => response.json())
+        .then(data => {
+            let container = document.getElementById('sites-container');
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<span style="color:#d32f2f;">暂无可用的爬虫节点，请联系管理员在后台配置。</span>';
+                return;
+            }
+            data.forEach(site => {
+                container.innerHTML += `
+                    <label style="cursor: pointer; font-size: 15px; display: flex; align-items: center;">
+                        <input type="checkbox" name="site_checkbox" value="${site.name}" checked style="margin-right: 5px; width: 16px; height: 16px;">
+                        ${site.name}
+                    </label>
+                `;
+            });
+        })
+        .catch(err => {
+            document.getElementById('sites-container').innerHTML = '<span style="color:red;">加载配置失败</span>';
         });
-        document.getElementById("siteBox").innerHTML = html;
-    });
-}
+});
 
-// 点击新闻
-function openNews(url, title, label){
-    fetch("/click_log", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({url, title, label})
-    });
-    window.open(url, "_blank");
-}
+// ==========================================
+// 2. 启动异步爬虫与 SSE 实时进度监听
+// ==========================================
+function startCrawl() {
+    let checkboxes = document.querySelectorAll('input[name="site_checkbox"]:checked');
+    let selectedSites = Array.from(checkboxes).map(cb => cb.value);
 
-// 加载新闻
-function loadNews(){
-    document.getElementById("news").innerHTML = "加载中...";
-    document.getElementById("progressBox").style.display = "block";
+    if (selectedSites.length === 0) {
+        alert("请至少勾选一个采集数据源！");
+        return;
+    }
 
-    let selected = [];
-    document.querySelectorAll("#siteBox input:checked")
-        .forEach(cb => selected.push(cb.value));
+    // 锁定按钮，初始化UI
+    let btn = document.getElementById('crawl-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 系统采集中...';
 
-    const evtSource = new EventSource("/news_stream?sites=" + selected.join(","));
+    document.getElementById('result-panel').style.display = 'none';
+    document.getElementById('progress-container').style.display = 'block';
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-text').innerText = '准备唤醒爬虫线程池...';
+    document.getElementById('progress-text').style.color = '#666';
 
-    evtSource.onmessage = function(event){
+    // 发起 SSE 连接，通过 Query 参数传递选中的爬虫名
+    let url = `/news_stream?sites=${encodeURIComponent(selectedSites.join(','))}`;
+    let eventSource = new EventSource(url);
+
+    // 接收后端 yield 返回的 JSON 数据流
+    eventSource.onmessage = function(event) {
         let data = JSON.parse(event.data);
 
-        if(data.progress !== undefined){
-            document.getElementById("progressBar").style.width = data.progress + "%";
-            document.getElementById("progressBar").innerText =
-                data.progress + "% - " + data.site;
+        // 任务结束标识
+        if (data.done) {
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-text').innerText = '✅ 所有流程执行完毕！';
+            document.getElementById('progress-text').style.color = '#2e7d32';
+            eventSource.close();
+
+            // 恢复按钮状态
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-satellite-dish"></i> 重新开始抓取';
+
+            // 渲染结果
+            renderResults(data.result);
+            return;
         }
 
-        if(data.done){
-            evtSource.close();
-            renderNews(data.result);
-        }
+        // 实时滚动进度
+        document.getElementById('progress-bar').style.width = data.progress + '%';
+        document.getElementById('progress-text').innerText = data.progress + '% - ' + data.site;
+    };
+
+    // 异常处理
+    eventSource.onerror = function() {
+        document.getElementById('progress-text').innerText = '❌ 连接超时或发生服务器错误';
+        document.getElementById('progress-text').style.color = '#d32f2f';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-satellite-dish"></i> 重试抓取';
+        eventSource.close();
     };
 }
 
-// 渲染新闻
-function renderNews(data){
-    let html = "";
+// ==========================================
+// 3. 将后端返回的聚合数据渲染为瀑布流卡片
+// ==========================================
+function renderResults(resultMap) {
+    document.getElementById('result-panel').style.display = 'block';
+    let html = '';
 
-    for(let label in data){
-        html += `<div class="category"><h3>${label}</h3>`;
+    let hasData = false;
+    // 遍历后端聚合好的字典 { "政治": [新闻1, 新闻2...], "财经": [...] }
+    for(let category in resultMap) {
+        if(resultMap[category].length === 0) continue;
+        hasData = true;
 
-        data[label].forEach(item => {
+        html += `
+            <div style="margin-top: 20px;">
+                <h4 style="border-left: 4px solid #4CAF50; padding-left: 10px; margin-bottom: 10px; font-size: 16px; color: #333;">
+                    ${category} (${resultMap[category].length} 条)
+                </h4>
+                <div class="recommend-grid">
+        `;
+
+        // 渲染具体卡片
+        resultMap[category].forEach(item => {
+            // 点击卡片，直接跳转至原文
             html += `
-            <div class="news-card">
-                <div class="news-title"
-                     onclick="openNews('${item.url}', \`${item.title}\`, '${label}')">
-                     ${item.title}
-                </div>
-                <div class="summary">${item.summary || ""}</div>
-                <div class="tag">${label}</div>
-            </div>
-            `;
+            <div class="recommend-item" onclick="window.open('${item.url}', '_blank')">
+                <div class="label"><i class="fas fa-tag"></i> ${item.label}</div>
+                <div class="title">${item.title}</div>
+                <div class="summary">${item.summary || '暂无正文摘要...'}</div>
+            </div>`;
         });
 
-        html += "</div>";
+        html += `</div></div>`;
     }
 
-    document.getElementById("news").innerHTML = html;
+    if(!hasData) {
+        html = '<p style="color:#888; padding: 20px 0;"><i class="fas fa-info-circle"></i> 未抓取到符合规则的有效新闻数据。</p>';
+    }
+
+    document.getElementById('news-results').innerHTML = html;
 }
-
-loadSites();
-
 </script>
 
 </body>

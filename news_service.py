@@ -13,21 +13,15 @@ from db import get_db
 # =========================
 def run_news_pipeline(selected_sites=None, progress_callback=None):
     # =========================
-    # 🌟 核心升级：从 MySQL 动态读取配置，彻底废弃 config.json
+    # ⭐ 核心修复：从 MySQL 动态读取爬虫配置，不再使用 config.json
     # =========================
-    try:
-        db = get_db()
-        cursor = db.cursor()
-        # 仅拉取管理员后台设置为“启用” (status=1) 的站点
-        cursor.execute("SELECT * FROM spider_config WHERE status=1")
-        db_sites = cursor.fetchall()
-        cursor.close()
-        db.close()
-    except Exception as e:
-        print("读取数据库爬虫配置失败:", e)
-        return {}
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM spider_config WHERE status=1")
+    db_sites = cursor.fetchall()
+    cursor.close()
+    db.close()
 
-    # 将数据库字段映射为 crawler.py 需要的字典格式
     sites = []
     for row in db_sites:
         sites.append({
@@ -37,33 +31,30 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
             "article_selector": row["article_selector"] if row.get("article_selector") else "a"
         })
 
-    # 根据前端勾选的站点进行过滤
+    # 根据前端勾选过滤
     if selected_sites:
         sites = [s for s in sites if s["name"] in selected_sites]
 
     if not sites:
-        if progress_callback:
-            progress_callback({"site": "错误：未匹配到任何启用的爬虫任务", "status": "done", "progress": 100})
+        if progress_callback: progress_callback({"site": "未选择爬虫或均被停用", "status": "done", "progress": 100})
         return {}
 
     all_news = []
 
     # =========================
-    # 1️⃣ 爬取新闻列表 (仅获取标题和链接)
+    # 1️⃣ 爬取新闻列表
     # =========================
     for idx, site in enumerate(sites):
         if progress_callback:
             progress_callback({
                 "site": site["name"] + " (列表获取)",
                 "status": "start",
-                "progress": int(idx / len(sites) * 30)  # 进度条分配 30% 给列表爬取
+                "progress": int(idx / len(sites) * 30)
             })
-
         news_list = crawl_news(site, max_news=30)
         all_news.extend(news_list)
 
-    if not all_news:
-        return {}
+    if not all_news: return {}
 
     # =========================
     # 2️⃣ ⭐ 核心优化：多线程并发拉取正文 (IO 密集型任务)
