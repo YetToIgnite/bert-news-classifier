@@ -48,28 +48,20 @@ body { font-family: "Segoe UI", Arial; background: #f5f7fb; }
 
 <div class="layout">
     <div class="sidebar">
-        <h2>新闻系统</h2>
-        <a href="/"><i class="fas fa-home"></i> 首页</a>
-        <a href="/news_page" class="active"><i class="fas fa-newspaper"></i> 聚合新闻</a>
-        <a href="/history"><i class="fas fa-clock"></i> 历史足迹</a>
-        <a href="/stats_page"><i class="fas fa-chart-bar"></i> 数据大屏</a>
-        <a href="/wordcloud_page"><i class="fas fa-cloud"></i> 语义词云</a>
+    <h2>新闻分类系统</h2>
+    <a href="/" class="{{ 'active' if request.path == '/' }}"><i class="fas fa-home"></i> 首页大厅</a>
+    <a href="/news_page" class="{{ 'active' if request.path == '/news_page' }}"><i class="fas fa-newspaper"></i> 聚合新闻</a>
+    <a href="/history" class="{{ 'active' if request.path == '/history' }}"><i class="fas fa-clock"></i> 历史足迹</a>
+    <a href="/stats_page" class="{{ 'active' if request.path == '/stats_page' }}"><i class="fas fa-chart-bar"></i> 数据统计</a>
+    <a href="/wordcloud_page" class="{{ 'active' if request.path == '/wordcloud_page' }}"><i class="fas fa-cloud"></i> 语义词云</a>
 
-        <hr style="border-color: #333; margin: 15px 0;">
-        <div style="color: #888; font-size: 12px; margin-bottom: 10px; padding-left: 12px;">动态新闻标签</div>
-        {% for cat in dynamic_categories %}
-            <a href="/news_page?category={{ cat.category_name }}" style="font-size: 14px; padding: 8px 12px;">
-                <i class="fas fa-hashtag" style="color: #4CAF50;"></i> {{ cat.category_name }}
-            </a>
-        {% endfor %}
-
-        {% if is_admin %}
-        <hr style="border-color: #333; margin: 15px 0;">
-        <a href="/admin" style="color: #f59e0b; font-weight: bold;">
-            <i class="fas fa-user-shield"></i> 系统管理员后台
-        </a>
-        {% endif %}
-    </div>
+    {% if is_admin %}
+    <hr style="border-color: #333; margin: 15px 0;">
+    <a href="/admin" class="{{ 'active' if request.path == '/admin' }}" style="color: #f59e0b; font-weight: bold;">
+        <i class="fas fa-user-shield"></i> 系统管理后台
+    </a>
+    {% endif %}
+</div>
 
     <div class="main">
         <div class="topbar">

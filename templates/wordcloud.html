@@ -144,28 +144,19 @@ img {
 <!-- ⭐ 左侧栏（统一 + 动态高亮） -->
 
 <div class="sidebar">
-    <h2>新闻系统</h2>
+    <h2>新闻分类系统</h2>
+    <a href="/" class="{{ 'active' if request.path == '/' }}"><i class="fas fa-home"></i> 首页大厅</a>
+    <a href="/news_page" class="{{ 'active' if request.path == '/news_page' }}"><i class="fas fa-newspaper"></i> 聚合新闻</a>
+    <a href="/history" class="{{ 'active' if request.path == '/history' }}"><i class="fas fa-clock"></i> 历史足迹</a>
+    <a href="/stats_page" class="{{ 'active' if request.path == '/stats_page' }}"><i class="fas fa-chart-bar"></i> 数据统计</a>
+    <a href="/wordcloud_page" class="{{ 'active' if request.path == '/wordcloud_page' }}"><i class="fas fa-cloud"></i> 语义词云</a>
 
-<a href="/" class="{% if active=='home' %}active{% endif %}">
-    <i class="fas fa-home"></i> 首页
-</a>
-
-<a href="/news_page" class="{% if active=='news' %}active{% endif %}">
-    <i class="fas fa-newspaper"></i> 新闻
-</a>
-
-<a href="/history" class="{% if active=='history' %}active{% endif %}">
-    <i class="fas fa-clock"></i> 历史
-</a>
-
-<a href="/stats_page" class="{% if active=='stats' %}active{% endif %}">
-    <i class="fas fa-chart-bar"></i> 统计
-</a>
-
-<a href="/wordcloud_page" class="{% if active=='wordcloud' %}active{% endif %}">
-    <i class="fas fa-cloud"></i> 词云
-</a>
-
+    {% if is_admin %}
+    <hr style="border-color: #333; margin: 15px 0;">
+    <a href="/admin" class="{{ 'active' if request.path == '/admin' }}" style="color: #f59e0b; font-weight: bold;">
+        <i class="fas fa-user-shield"></i> 系统管理后台
+    </a>
+    {% endif %}
 </div>
 
 <!-- 主体 -->

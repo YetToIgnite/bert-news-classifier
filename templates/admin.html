@@ -2,97 +2,216 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>系统管理员控制台</title>
+<title>系统管理员后台 - 新闻分类系统</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-    body { font-family: Arial; background: #f5f7fb; padding: 30px; }
-    h1 { color: #333; margin-bottom: 20px; }
-    .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-    th { background: #f9fafb; color: #555; }
-    .switch-btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; color: white;}
-    .btn-on { background: #4CAF50; }
-    .btn-off { background: #f44336; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Segoe UI", Arial; background: #f5f7fb; }
+
+/* 整体布局 - 严格对齐 */
+.layout { display: flex; height: 100vh; }
+
+/* =========================================
+   统一的左侧导航样式 (与历史/首页完全一致)
+   ========================================= */
+.sidebar {
+    width: 220px;
+    background: #111827;
+    color: #fff;
+    padding: 25px 15px;
+    flex-shrink: 0;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 18px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #bbb;
+    text-decoration: none;
+    transition: 0.3s;
+    /* 移除 font-size: 15px，保持默认大小以消除切换偏移 */
+}
+
+.sidebar a i {
+    margin-right: 10px;
+    /* 移除固定 width 20px，确保与历史页间距完全一致 */
+}
+
+.sidebar a:hover {
+    background: #4CAF50;
+    color: white;
+}
+
+/* 管理员菜单激活时的特殊颜色（金黄色） */
+.sidebar a.active {
+    background: #f59e0b;
+    color: white;
+    font-weight: bold;
+}
+
+/* =========================================
+   管理后台主区域样式
+   ========================================= */
+.main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+.topbar {
+    height: 60px;
+    background: white;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.content { padding: 30px; }
+
+/* 卡片面板 */
+.panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
+.panel h3 { margin-bottom: 10px; color: #333; display: flex; align-items: center; font-size: 18px; }
+.panel h3 i { margin-right: 10px; color: #f59e0b; }
+
+/* 表格与表单控件 */
+table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f9fafb; color: #666; font-weight: 600; border-radius: 4px; }
+tr:hover { background-color: #f8fafc; }
+
+.switch-btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-size: 13px; transition: 0.2s;}
+.switch-btn:hover { opacity: 0.8; }
+.btn-on { background: #4CAF50; }
+.btn-off { background: #f44336; }
+.btn-del { background: #ef4444; margin-left: 5px; }
+
+/* 输入组样式优化 */
+.input-group { background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 15px; border: 1px dashed #cbd5e1; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.input-group h4 { margin: 0; color: #4CAF50; width: 100%; margin-bottom: 5px; font-size: 15px;}
+.input-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; outline: none; font-size: 14px; transition: border 0.3s;}
+.input-group input:focus { border-color: #4CAF50; }
+.btn-primary { padding: 10px 18px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;}
+.btn-primary:hover { background: #45a049; }
 </style>
 </head>
 <body>
 
-    <h1><i class="fas fa-cogs"></i> 系统动态配置后台 (仅 Admin 可见)</h1>
-    <a href="/" style="color: #4CAF50; text-decoration: none; margin-bottom: 20px; display: inline-block;">&larr; 返回前台大厅</a>
+<div class="layout">
+    <!-- 侧边栏：结构与首页/历史页完全对齐 -->
+    <div class="sidebar">
+        <h2>新闻分类系统</h2>
+        <a href="/"><i class="fas fa-home"></i> 首页大厅</a>
+        <a href="/news_page"><i class="fas fa-newspaper"></i> 聚合新闻</a>
+        <a href="/history"><i class="fas fa-clock"></i> 历史足迹</a>
+        <a href="/stats_page"><i class="fas fa-chart-bar"></i> 数据统计</a>
+        <a href="/wordcloud_page"><i class="fas fa-cloud"></i> 语义词云</a>
 
-    <div class="panel">
-        <h3><i class="fas fa-sitemap"></i> 动态新闻分类管理 (Category Dict)</h3>
-        <p style="color: #888; font-size: 14px;">说明：停用的分类将立刻从前端左侧菜单与词云页面消失。</p>
-        <table>
-            <tr><th>ID</th><th>分类名称</th><th>状态</th><th>操作</th></tr>
-            {% for cat in cats %}
-            <tr>
-                <td>{{ cat.id }}</td>
-                <td><span style="background:#e8f5e9;color:#2e7d32;padding:4px 8px;border-radius:4px;"># {{ cat.category_name }}</span></td>
-                <td>{{ '🟢 显示中' if cat.is_active else '🔴 已隐藏' }}</td>
-                <td>
-                    <button class="switch-btn {{ 'btn-off' if cat.is_active else 'btn-on' }}"
-                            onclick="toggleCat({{ cat.id }}, {{ 0 if cat.is_active else 1 }})">
-                        {{ '隐藏该分类' if cat.is_active else '恢复显示' }}
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+        {% if is_admin %}
+        <hr style="border-color: #333; margin: 15px 0;">
+        <a href="/admin" class="active">
+            <i class="fas fa-user-shield"></i> 系统管理后台
+        </a>
+        {% endif %}
     </div>
 
-   <div class="panel">
-        <h3><i class="fas fa-spider"></i> 爬虫目标源配置 (Spider Config)</h3>
-
-        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #ccc;">
-            <h4 style="margin-bottom: 10px; color: #4CAF50;"><i class="fas fa-plus"></i> 新增爬虫节点</h4>
-            <input type="text" id="sp_name" placeholder="网站名称(如: 新浪)" style="padding:6px; margin-right:5px;">
-            <input type="text" id="sp_url" placeholder="目标URL (列表页)" style="padding:6px; width:220px; margin-right:5px;">
-            <input type="text" id="sp_base" placeholder="基准URL (拼接文章用)" style="padding:6px; width:220px; margin-right:5px;">
-            <input type="text" id="sp_rule" placeholder="CSS选择器(默认: a)" style="padding:6px; width:120px; margin-right:5px;">
-            <button onclick="addSpider()" style="padding: 7px 15px; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">确定添加</button>
+    <div class="main">
+        <div class="topbar">
+            <h3><i class="fas fa-cogs" style="color: #f59e0b;"></i> 系统核心动态配置中心 (Admin)</h3>
+            <div class="user">
+                👤 {{ session['user'] }} | <a href="/logout" style="color:#d32f2f; text-decoration:none;">退出</a>
+            </div>
         </div>
 
-        <table id="spider-table">
-            <tr><th>ID</th><th>网站名称</th><th>爬取地址 (URL)</th><th>状态</th><th>操作</th></tr>
-            {% for sp in spiders %}
-            <tr>
-                <td>{{ sp.id }}</td>
-                <td><b>{{ sp.site_name }}</b></td>
-                <td><a href="{{ sp.target_url }}" target="_blank">{{ sp.target_url }}</a></td>
-                <td>{{ '🟢 启用' if sp.status else '🔴 停用' }}</td>
-                <td>
-                    <button class="switch-btn {{ 'btn-off' if sp.status else 'btn-on' }}" onclick="toggleSpider({{ sp.id }}, {{ 0 if sp.status else 1 }})">
-                        {{ '停用' if sp.status else '启用' }}
-                    </button>
-                    <button class="switch-btn btn-off" style="background:#dc3545; margin-left:5px;" onclick="deleteSpider({{ sp.id }})">删除</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+        <div class="content">
+            <div class="panel">
+                <h3><i class="fas fa-sitemap"></i> 1. 动态新闻分类字典 (Category Dict)</h3>
+                <p style="color: #888; font-size: 13px; margin-bottom: 10px;">配置说明：停用的分类将即时从系统所有的分类过滤项中隐藏。</p>
+                <table>
+                    <tr><th style="width: 80px;">ID</th><th>类别名称</th><th style="width: 150px;">前台状态</th><th style="width: 150px;">控制操作</th></tr>
+                    {% for cat in cats %}
+                    <tr>
+                        <td>{{ cat.id }}</td>
+                        <td><span style="background:#e8f5e9;color:#2e7d32;padding:4px 8px;border-radius:4px; font-weight: bold;"># {{ cat.category_name }}</span></td>
+                        <td>
+                            {% if cat.is_active %}
+                                <span style="color:#4CAF50;"><i class="fas fa-circle" style="font-size:10px;"></i> 显示中</span>
+                            {% else %}
+                                <span style="color:#ef4444;"><i class="fas fa-circle" style="font-size:10px;"></i> 已隐藏</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="switch-btn {{ 'btn-off' if cat.is_active else 'btn-on' }}"
+                                    onclick="toggleCat({{ cat.id }}, {{ 0 if cat.is_active else 1 }})">
+                                <i class="fas {{ 'fa-eye-slash' if cat.is_active else 'fa-eye' }}"></i>
+                                {{ '设为隐藏' if cat.is_active else '恢复显示' }}
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+            <div class="panel">
+                <h3><i class="fas fa-spider"></i> 2. 多线程爬虫目标源控制 (Spider Config)</h3>
+                <p style="color: #888; font-size: 13px; margin-bottom: 15px;">配置说明：配置调度爬虫线程池入口。</p>
+
+                <div class="input-group">
+                    <h4><i class="fas fa-plus-circle"></i> 新增网络抓取节点</h4>
+                    <input type="text" id="sp_name" placeholder="网站名称" style="width: 160px;">
+                    <input type="text" id="sp_url" placeholder="目标列表 URL" style="flex: 1; min-width: 200px;">
+                    <input type="text" id="sp_base" placeholder="基准 URL" style="flex: 1; min-width: 200px;">
+                    <input type="text" id="sp_rule" placeholder="链接选择器" value="a" style="width: 150px;">
+                    <button class="btn-primary" onclick="addSpider()"><i class="fas fa-save"></i> 立即生效</button>
+                </div>
+
+                <table id="spider-table">
+                    <tr><th style="width: 80px;">ID</th><th>站点名称</th><th>爬取入口地址</th><th style="width: 120px;">运行状态</th><th style="width: 180px;">控制操作</th></tr>
+                    {% for sp in spiders %}
+                    <tr>
+                        <td>{{ sp.id }}</td>
+                        <td><b style="color: #1e293b;">{{ sp.site_name }}</b></td>
+                        <td><a href="{{ sp.target_url }}" target="_blank" style="color: #3b82f6; text-decoration: none;"><i class="fas fa-link"></i> {{ sp.target_url }}</a></td>
+                        <td>
+                            {% if sp.status %}
+                                <span style="color:#4CAF50;"><i class="fas fa-play-circle"></i> 启用中</span>
+                            {% else %}
+                                <span style="color:#ef4444;"><i class="fas fa-pause-circle"></i> 已停用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="switch-btn {{ 'btn-off' if sp.status else 'btn-on' }}" onclick="toggleSpider({{ sp.id }}, {{ 0 if sp.status else 1 }})">
+                                {{ '强行停用' if sp.status else '一键启用' }}
+                            </button>
+                            <button class="switch-btn btn-del" onclick="deleteSpider({{ sp.id }})">
+                                <i class="fas fa-trash-alt"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+        </div>
     </div>
+</div>
 
 <script>
-// ======================
-// 分类管理 JS
-// ======================
 function toggleCat(id, newStatus) {
     fetch('/admin/toggle_category/' + id, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({status: newStatus})
     }).then(res => res.json()).then(data => {
-        alert(data.msg);
         location.reload();
     }).catch(err => {
-        alert("操作失败，请确认后端正常运行！");
+        alert("操作失败");
     });
 }
 
-// ======================
-// 爬虫配置 JS
-// ======================
 function toggleSpider(id, newStatus) {
     fetch('/admin/toggle_spider/' + id, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -101,7 +220,7 @@ function toggleSpider(id, newStatus) {
 }
 
 function deleteSpider(id) {
-    if(!confirm('确定要彻底删除这个爬虫节点吗？')) return;
+    if(!confirm('确定要删除吗？')) return;
     fetch('/admin/spider/delete/' + id, { method: 'POST' })
     .then(res => res.json()).then(data => location.reload());
 }
@@ -114,18 +233,13 @@ function addSpider() {
         article_selector: document.getElementById('sp_rule').value.trim() || "a"
     };
 
-    if(!payload.site_name || !payload.target_url) {
-        return alert('网站名称和目标URL必填！');
-    }
+    if(!payload.site_name || !payload.target_url) return alert('必填项缺失');
 
     fetch('/admin/spider/add', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
     }).then(res => res.json()).then(data => {
-        alert(data.msg);
         location.reload();
-    }).catch(err => {
-        alert('添加失败，请检查网络或控制台报错');
     });
 }
 </script>
