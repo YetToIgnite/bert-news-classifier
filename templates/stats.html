@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta charset="UTF-8">
@@ -7,6 +6,7 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 
 <style>
 * {
@@ -24,6 +24,7 @@ body {
 .layout {
     display: flex;
     height: 100vh;
+    overflow: hidden; /* 防止整体页面滚动，改为内容区滚动 */
 }
 
 /* ⭐ 统一左侧栏（和index一致） */
@@ -32,6 +33,7 @@ body {
     background: #111827;
     color: white;
     padding: 25px 15px;
+    flex-shrink: 0;
 }
 
 .sidebar h2 {
@@ -66,6 +68,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto; /* 允许主内容区滚动 */
 }
 
 /* 顶部栏 */
@@ -77,6 +80,7 @@ body {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    flex-shrink: 0;
 }
 
 /* 内容 */
@@ -115,6 +119,16 @@ body {
     border-radius: 15px;
     padding: 30px;
     box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+    margin-bottom: 25px; /* 增加底部外边距，分隔多个图表 */
+}
+
+.chart-header {
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 canvas {
@@ -129,8 +143,6 @@ canvas {
 <body>
 
 <div class="layout">
-
-<!-- 左侧菜单（统一版） -->
 
 <div class="sidebar">
     <h2>新闻分类系统</h2>
@@ -148,37 +160,42 @@ canvas {
     {% endif %}
 </div>
 
-<!-- 主体 -->
-
 <div class="main">
 
-<!-- 顶部 -->
 <div class="topbar">
     <h3>分类统计分析</h3>
-    <div>📊 数据可视化</div>
+    <div>数据可视化</div>
 </div>
 
 <div class="content">
 
-    <!-- 数据卡片 -->
     <div class="cards">
         <div class="card">
-            <h4>总分类数</h4>
+            <h4>总阅读数</h4>
             <p id="total">--</p>
         </div>
         <div class="card">
-            <h4>类别数量</h4>
+            <h4>涉及类别数</h4>
             <p id="count">--</p>
         </div>
         <div class="card">
-            <h4>热门类别</h4>
+            <h4>最常阅读类别</h4>
             <p id="hot">--</p>
         </div>
     </div>
 
-    <!-- 图表 -->
     <div class="chart-card">
+        <div class="chart-header">
+            <i class="fas fa-chart-bar text-primary"></i> <span>各类别阅读总量统计</span>
+        </div>
         <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <i class="fas fa-chart-line text-success" style="color: #4CAF50;"></i> <span>用户阅读兴趣趋势 (近7天)</span>
+        </div>
+        <div id="trendChart" style="width: 100%; height: 400px;"></div>
     </div>
 
 </div>
@@ -188,7 +205,9 @@ canvas {
 </div>
 
 <script>
-
+// ==========================================
+// 1. 获取基础统计数据并渲染 Chart.js 柱状图
+// ==========================================
 fetch('/stats')
 .then(res => res.json())
 .then(data => {
@@ -240,7 +259,90 @@ fetch('/stats')
             }
         }
     });
+});
 
+// ==========================================
+// 2. ⭐ 新增：获取时间序列数据并渲染 ECharts 折线图
+// ==========================================
+document.addEventListener("DOMContentLoaded", function() {
+    var trendChartDom = document.getElementById('trendChart');
+    var trendChart = echarts.init(trendChartDom);
+
+    // 显示加载动画
+    trendChart.showLoading({
+        text: '数据加载中...',
+        color: '#4CAF50',
+        textColor: '#000',
+        maskColor: 'rgba(255, 255, 255, 0.8)'
+    });
+
+    fetch('/stats_trend')
+        .then(response => response.json())
+        .then(data => {
+            trendChart.hideLoading();
+
+            // 异常/空数据处理
+            if (!data.dates || data.dates.length === 0) {
+                trendChartDom.innerHTML = "<div style='text-align:center; color:#999; line-height:400px; font-size:16px;'>暂无近7天阅读趋势数据</div>";
+                return;
+            }
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'cross' } // 十字准星指示器
+                },
+                legend: {
+                    data: data.labels,
+                    top: '0%',
+                    type: 'scroll' // 类别过多时允许滚动
+                },
+                grid: {
+                    left: '2%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {
+                            title: '保存为图片',
+                            name: '阅读兴趣趋势图'
+                        } // 方便毕业答辩导出使用
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: data.dates,
+                    axisLine: { lineStyle: { color: '#ccc' } },
+                    axisLabel: { color: '#666' }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '阅读篇数',
+                    minInterval: 1, // 确保Y轴为整数
+                    splitLine: {
+                        lineStyle: { type: 'dashed', color: '#eee' }
+                    },
+                    axisLine: { show: false },
+                    axisLabel: { color: '#666' }
+                },
+                series: data.series // 后端传来的组装好的 series 数据
+            };
+
+            trendChart.setOption(option);
+        })
+        .catch(error => {
+            console.error("获取趋势数据失败:", error);
+            trendChart.hideLoading();
+            trendChartDom.innerHTML = "<div style='text-align:center; color:red; line-height:400px;'>数据加载失败，请检查后端接口</div>";
+        });
+
+    // 监听窗口大小变化，使 ECharts 图表自适应缩放
+    window.addEventListener('resize', function() {
+        trendChart.resize();
+    });
 });
 </script>
 

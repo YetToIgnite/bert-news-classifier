@@ -37,12 +37,10 @@ body { font-family: "Segoe UI", Arial; background: #f5f7fb; }
     color: #bbb;
     text-decoration: none;
     transition: 0.3s;
-    /* 移除 font-size: 15px，保持默认大小以消除切换偏移 */
 }
 
 .sidebar a i {
     margin-right: 10px;
-    /* 移除固定 width 20px，确保与历史页间距完全一致 */
 }
 
 .sidebar a:hover {
@@ -71,6 +69,45 @@ body { font-family: "Segoe UI", Arial; background: #f5f7fb; }
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 .content { padding: 30px; }
+
+/* ⭐ 新增：仪表盘数据卡片样式 */
+.dashboard-cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.dash-card {
+    flex: 1;
+    background: linear-gradient(135deg, #4CAF50, #81C784); /* 绿色渐变 */
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-card.blue {
+    background: linear-gradient(135deg, #2196F3, #64B5F6); /* 蓝色渐变 */
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+}
+
+.dash-card.orange {
+    background: linear-gradient(135deg, #FF9800, #FFB74D); /* 橙色渐变 */
+    box-shadow: 0 5px 15px rgba(255, 152, 0, 0.2);
+}
+
+.dash-card h4 { font-size: 15px; margin-bottom: 10px; opacity: 0.9; font-weight: 500;}
+.dash-card p { font-size: 32px; font-weight: bold; }
+.dash-card i.bg-icon {
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    font-size: 90px;
+    opacity: 0.15;
+    transform: rotate(-10deg);
+}
 
 /* 卡片面板 */
 .panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); margin-bottom: 25px; }
@@ -101,7 +138,6 @@ tr:hover { background-color: #f8fafc; }
 <body>
 
 <div class="layout">
-    <!-- 侧边栏：结构与首页/历史页完全对齐 -->
     <div class="sidebar">
         <h2>新闻分类系统</h2>
         <a href="/"><i class="fas fa-home"></i> 首页大厅</a>
@@ -127,6 +163,25 @@ tr:hover { background-color: #f8fafc; }
         </div>
 
         <div class="content">
+
+            <div class="dashboard-cards">
+                <div class="dash-card blue">
+                    <i class="fas fa-users bg-icon"></i>
+                    <h4>系统注册用户总数</h4>
+                    <p id="dash_users"><i class="fas fa-spinner fa-spin" style="font-size: 20px;"></i></p>
+                </div>
+                <div class="dash-card">
+                    <i class="fas fa-database bg-icon"></i>
+                    <h4>新闻库已入库总量</h4>
+                    <p id="dash_news"><i class="fas fa-spinner fa-spin" style="font-size: 20px;"></i></p>
+                </div>
+                <div class="dash-card orange">
+                    <i class="fas fa-mouse-pointer bg-icon"></i>
+                    <h4>全站文章点击/预测总数</h4>
+                    <p id="dash_records"><i class="fas fa-spinner fa-spin" style="font-size: 20px;"></i></p>
+                </div>
+            </div>
+
             <div class="panel">
                 <h3><i class="fas fa-sitemap"></i> 1. 动态新闻分类字典 (Category Dict)</h3>
                 <p style="color: #888; font-size: 13px; margin-bottom: 10px;">配置说明：停用的分类将即时从系统所有的分类过滤项中隐藏。</p>
@@ -200,6 +255,56 @@ tr:hover { background-color: #f8fafc; }
 </div>
 
 <script>
+// ==========================================
+// ⭐ 新增：异步拉取仪表盘核心数据
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/admin/dashboard_data')
+        .then(res => res.json())
+        .then(data => {
+            if(!data.error) {
+                // 实现一个简单的数字滚动动画效果（非必须，但毕设演示效果好）
+                animateValue("dash_users", 0, data.total_users, 800);
+                animateValue("dash_news", 0, data.total_news, 800);
+                animateValue("dash_records", 0, data.total_records, 800);
+            }
+        })
+        .catch(err => {
+            console.error("获取监控数据失败");
+            document.getElementById('dash_users').innerText = '数据异常';
+            document.getElementById('dash_news').innerText = '数据异常';
+            document.getElementById('dash_records').innerText = '数据异常';
+        });
+});
+
+// 数字滚动动画函数
+function animateValue(id, start, end, duration) {
+    if (start === end) {
+        document.getElementById(id).innerHTML = end;
+        return;
+    }
+    let range = end - start;
+    let current = start;
+    let increment = end > start ? 1 : -1;
+    // 自动计算步长，避免大数字动画过慢
+    let stepTime = Math.abs(Math.floor(duration / range));
+    if (stepTime < 10) {
+        increment = Math.ceil(range / (duration / 10));
+        stepTime = 10;
+    }
+
+    let obj = document.getElementById(id);
+    let timer = setInterval(function() {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        obj.innerHTML = current;
+    }, stepTime);
+}
+
+// ---------------- 以下为原有的控制逻辑 ----------------
 function toggleCat(id, newStatus) {
     fetch('/admin/toggle_category/' + id, {
         method: 'POST',
@@ -220,7 +325,7 @@ function toggleSpider(id, newStatus) {
 }
 
 function deleteSpider(id) {
-    if(!confirm('确定要删除吗？')) return;
+    if(!confirm('确定要删除该爬虫节点吗？')) return;
     fetch('/admin/spider/delete/' + id, { method: 'POST' })
     .then(res => res.json()).then(data => location.reload());
 }
@@ -233,7 +338,7 @@ function addSpider() {
         article_selector: document.getElementById('sp_rule').value.trim() || "a"
     };
 
-    if(!payload.site_name || !payload.target_url) return alert('必填项缺失');
+    if(!payload.site_name || !payload.target_url) return alert('必填项缺失，请检查网站名称与URL！');
 
     fetch('/admin/spider/add', {
         method: 'POST', headers: {'Content-Type': 'application/json'},

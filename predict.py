@@ -121,10 +121,19 @@ def predict_label_with_conf(text, username=None):
 
 
 # ======================
-# 只返回label（旧接口兼容）
+# 只返回label（带置信度拒绝机制的优化版）
 # ======================
 def predict_label(text):
-    return predict_label_with_conf(text)["label"]
+    res = predict_label_with_conf(text)
+    label = res["label"]
+    confidence = res["confidence"]
+
+    # 🌟 优化核心：如果模型对分类的把握低于 60%，就不要强行归类到专业领域
+    # 将其分配到 "泛阅读"（你可以提前在数据库 category_dict 中增加一个 '泛阅读' 或 '社会' 的类别）
+    if confidence < 60.0:
+        return "社会"  # 兜底类别，避免荒谬的跨领域误判
+
+    return label
 
 
 # ======================

@@ -306,6 +306,57 @@ def stats():
         return jsonify({'labels': [], 'values': []})
 
 
+@app.route('/stats_trend')
+def stats_trend():
+    if 'user' not in session:
+        return jsonify({'dates': [], 'series': [], 'labels': []})
+
+    user = session['user']
+    try:
+        db = get_db()
+        cursor = db.cursor()
+
+        # 按日期和类别统计点击量 (提取近7天数据)
+        cursor.execute("""
+            SELECT DATE(create_time) as click_date, label, COUNT(*) as count
+            FROM click_log
+            WHERE username=%s AND create_time >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            GROUP BY DATE(create_time), label
+            ORDER BY click_date ASC
+        """, (user,))
+
+        data = cursor.fetchall()
+        cursor.close()
+        db.close()
+
+        # 提取并排序所有出现的日期（X轴）
+        dates = sorted(list(set([str(row['click_date']) for row in data])))
+        # 提取所有出现的新闻类别（图例）
+        labels = list(set([row['label'] for row in data]))
+
+        series_data = []
+        for label in labels:
+            counts = []
+            for d in dates:
+                # 匹配对应日期和类别的点击量，若无则补 0
+                match = next(
+                    (item['count'] for item in data if str(item['click_date']) == d and item['label'] == label), 0)
+                counts.append(match)
+
+            # 组装为 ECharts series 格式
+            series_data.append({
+                'name': label,
+                'type': 'line',
+                'smooth': True,  # 使用平滑曲线，视觉效果更好
+                'data': counts
+            })
+
+        return jsonify({'dates': dates, 'series': series_data, 'labels': labels})
+    except Exception as e:
+        print("趋势统计报错:", e)
+        return jsonify({'dates': [], 'series': [], 'labels': []})
+
+
 # ======================
 # ⭐ 词云页面 (改为动态分类)
 # ======================
@@ -552,6 +603,41 @@ def admin_dashboard():
     db.close()
 
     return render_template('admin.html', cats=cats, spiders=spiders)
+
+
+# ======================
+# ⭐ 获取后台仪表盘监控数据 (新增)
+# ======================
+@app.route('/admin/dashboard_data')
+def admin_dashboard_data():
+    if session.get('user') != 'admin':
+        return jsonify({'error': '无权限'}), 403
+
+    db = get_db()
+    cursor = db.cursor()
+
+    try:
+        # 获取系统核心指标
+        cursor.execute("SELECT COUNT(*) as total_users FROM user")
+        total_users = cursor.fetchone()['total_users']
+
+        cursor.execute("SELECT COUNT(*) as total_news FROM news")
+        total_news = cursor.fetchone()['total_news']
+
+        cursor.execute("SELECT COUNT(*) as total_records FROM click_log")
+        total_records = cursor.fetchone()['total_records']
+
+        return jsonify({
+            'total_users': total_users,
+            'total_news': total_news,
+            'total_records': total_records
+        })
+    except Exception as e:
+        print("获取监控数据失败:", e)
+        return jsonify({'total_users': 0, 'total_news': 0, 'total_records': 0})
+    finally:
+        cursor.close()
+        db.close()
 
 
 @app.route('/admin/toggle_category/<int:id>', methods=['POST'])

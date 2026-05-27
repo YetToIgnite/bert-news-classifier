@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 import time
 import re
 import os
+from newspaper import Article
 
 os.environ["HTTP_PROXY"] = ""
 os.environ["HTTPS_PROXY"] = ""
@@ -59,9 +60,13 @@ def crawl_news(site_config, max_news=30):
     news_list = []
     seen = set()
 
+    # 🌟 优化：增强过滤词库，拦截推广广告和无意义页面
     bad_words = [
         "首页", "客户端", "视频", "图片", "登录", "注册",
-        "专题", "更多", "排行", "直播", "广告", "公告", "查看更多"
+        "专题", "更多", "排行", "直播", "广告", "公告", "查看更多",
+        "邮箱", "特权", "下载", "应用", "服务平台",
+        # ⬇️ 新增：屏蔽人民网/新华网等媒体的多语言切换按钮与内部工具
+        "Русский", "Português", "English", "Français", "智能创作", "Language"
     ]
 
     for link in links:
@@ -101,9 +106,23 @@ def crawl_news(site_config, max_news=30):
 
 
 # =========================
-# （可选）正文抓取函数（给 news_service 用）
+# （核心优化）正文抓取函数：基于 newspaper3k + BeautifulSoup 双重保障
 # =========================
 def get_news_content(url):
+    # 方案 A: 优先使用 newspaper3k 智能提取
+    try:
+        article = Article(url, language='zh')
+        article.download()
+        article.parse()
+        text = article.text.replace('\n', ' ').strip()
+
+        # 如果提取出的正文长度大于 20 个字，认为提取成功
+        if len(text) > 20:
+            return text
+    except Exception as e:
+        print(f"🔄 智能提取受阻，尝试备用方案: {url}")
+
+    # 方案 B: newspaper3k 失败时，回退到原有的 BeautifulSoup 提取逻辑
     try:
         html = fetch(url)
         if not html:
@@ -111,15 +130,14 @@ def get_news_content(url):
 
         soup = BeautifulSoup(html, "html.parser")
 
-        # ❌ 删除垃圾标签
-        for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
+        # 删除垃圾标签
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside", "video"]):
             tag.decompose()
 
-        # ❌ 去掉明显无关文本
         bad_keywords = [
             "版权所有", "Copyright", "登录", "注册",
             "意见反馈", "广告", "举报邮箱",
-            "新浪公司", "免责声明", "收藏"
+            "新浪公司", "免责声明", "收藏", "责任编辑"
         ]
 
         paragraphs = soup.find_all("p")
@@ -127,17 +145,14 @@ def get_news_content(url):
         texts = []
         for p in paragraphs:
             t = p.get_text().strip()
-
             if len(t) < 10:
                 continue
-
             if any(k in t for k in bad_keywords):
                 continue
-
             texts.append(t)
 
         return " ".join(texts)
 
     except Exception as e:
-        print("正文抓取失败:", url, e)
+        print("❌ 正文彻底抓取失败:", url, e)
         return ""

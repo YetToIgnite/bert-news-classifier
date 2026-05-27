@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from datetime import datetime
-import concurrent.futures  # 🌟 新增：引入 Python 原生并发库
+import concurrent.futures  # 🌟 引入 Python 原生并发库
 
 from crawler.crawler import crawl_news, get_news_content
 from predict import predict_label
@@ -13,7 +13,7 @@ from db import get_db
 # =========================
 def run_news_pipeline(selected_sites=None, progress_callback=None):
     # =========================
-    # ⭐ 核心修复：从 MySQL 动态读取爬虫配置，不再使用 config.json
+    # ⭐ 从 MySQL 动态读取爬虫配置
     # =========================
     db = get_db()
     cursor = db.cursor()
@@ -57,7 +57,7 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
     if not all_news: return {}
 
     # =========================
-    # 2️⃣ ⭐ 核心优化：多线程并发拉取正文 (IO 密集型任务)
+    # 2️⃣ 多线程并发拉取正文 (IO 密集型任务)
     # =========================
     if progress_callback:
         progress_callback({
@@ -72,13 +72,12 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
         news_item["content"] = content if content else ""
         return news_item
 
-    # 🌟 创建包含 10 个线程的线程池
+    # 创建包含 10 个线程的线程池并发执行
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        # map 函数会自动将 all_news 分发给 10 个线程并发执行，并阻塞等待所有执行完毕
         all_news_with_content = list(executor.map(fetch_single_content, all_news))
 
     # =========================
-    # 3️⃣ 分类 + 入库 (CPU/GPU 密集型任务，保持串行确保 PyTorch 稳定)
+    # 3️⃣ 分类 + 入库 (保持串行确保 PyTorch 稳定)
     # =========================
     db = get_db()
     cursor = db.cursor()
@@ -88,7 +87,7 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
 
     for idx, news in enumerate(all_news_with_content):
         # 更新进度条
-        if progress_callback and idx % 5 == 0:  # 每处理 5 条更新一次，防止前端卡顿
+        if progress_callback and idx % 5 == 0:
             progress_callback({
                 "site": f"AI 模型推理分析中 ({idx}/{total_items})...",
                 "status": "process",
@@ -102,10 +101,28 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
         if not title:
             continue
 
+        # 🌟 终极过滤：正文少于 30 个字（比如只有"暂无正文摘要"或者"已收藏"），直接丢弃该条新闻
+        if len(content) < 30:
+            continue
+
         text = title + " " + content
 
         # 🌟 BERT 分类推理
         label = predict_label(text)
+
+        # ==========================================
+        # ⭐ 新增：信源隔离与强制规则后处理 (Post-processing)
+        # ==========================================
+        url_lower = url.lower()
+
+        # 规则 1：如果是来自体育专门频道的链接，直接“钦定”为体育，无视模型结果
+        if 'sports' in url_lower or 'tiyu' in url_lower:
+            label = '体育'
+
+        # 规则 2：如果是来自常规综合频道的链接，但模型判断为“体育”，极大概率是情感段子误判
+        elif label == '体育' and not ('sports' in url_lower or 'tiyu' in url_lower):
+            # 将可疑的“伪体育”降级到兜底类别
+            label = '社会'
 
         item = {
             "title": title,
