@@ -12,6 +12,7 @@ from db import get_db
 from predict import predict, save_record
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql.cursors # 确保引入了 cursors 用于字典格式读取
+import random
 
 app = Flask(__name__)
 app.secret_key = '123456'
@@ -558,27 +559,37 @@ def recommend():
         # ======================
         # 3️⃣ 推荐新闻
         # ======================
-        format_strings = ','.join(['%s'] * len(categories))
+        result = []
 
-        query = f"""
-            SELECT title, url, category as label
-            FROM news
-            WHERE category IN ({format_strings})
-            AND title NOT IN (
-                SELECT title FROM click_log WHERE username=%s
-            )
-            ORDER BY crawl_time DESC
-            LIMIT 10
-        """
+        # 针对每个兴趣标签，分别拉取一定数量的最新新闻，避免单一类别霸屏
+        # 假设总推荐量为 10 条，如果有 3 个兴趣，按 4:3:3 的比例拉取
+        if len(categories) >= 3:
+            limits = [4, 3, 3]
+        elif len(categories) == 2:
+            limits = [5, 5]
+        else:
+            limits = [10]
 
-        cursor.execute(query, (*categories, user))
-        result = cursor.fetchall()
+        # 遍历用户的兴趣列表，分别执行查询
+        for idx, category in enumerate(categories):
+            query = """
+                        SELECT title, url, category as label
+                        FROM news
+                        WHERE category = %s
+                        AND title NOT IN (
+                            SELECT title FROM click_log WHERE username=%s
+                        )
+                        ORDER BY crawl_time DESC
+                        LIMIT %s
+                    """
+            cursor.execute(query, (category, user, limits[idx]))
+            result.extend(cursor.fetchall())
+
+        # 将不同类别的推荐结果随机打乱
+        # 这样在前端渲染时，科技、社会、政治等标签会穿插出现，避免视觉疲劳
+        random.shuffle(result)
 
         return jsonify(result)
-
-    except Exception as e:
-        print("推荐错误:", e)
-        return jsonify([])
 
     finally:
         cursor.close()

@@ -149,11 +149,23 @@ def run_news_pipeline(selected_sites=None, progress_callback=None):
     if progress_callback:
         progress_callback({"site": "全部分析完成", "status": "done", "progress": 100})
 
-    # =========================
-    # 4️⃣ 按类别整理返回
-    # =========================
-    category_map = defaultdict(list)
-    for item in results:
-        category_map[item["label"]].append(item)
+        # =========================
+        # 4️⃣ 按类别整理返回
+        # =========================
+        category_map = defaultdict(list)
+        for item in results:
+            category_map[item["label"]].append(item)
 
-    return {label: items[:10] for label, items in category_map.items()}
+        # 🌟 新增：定义你期望的类别展示顺序
+        # 将“社会”放在较靠后的位置，把政治、科技、教育等排在前面
+        preferred_order = ['政治', '科技', '教育', '娱乐', '房产', '体育', '社会', '财经', '股票', '游戏']
+
+        # 按照定义的顺序对当前爬取到的分类进行排序
+        # 如果遇到不在列表里的意外类别，赋值权重为 999 放到最后面
+        sorted_labels = sorted(
+            category_map.keys(),
+            key=lambda x: preferred_order.index(x) if x in preferred_order else 999
+        )
+
+        # 按照排好的顺序重新组装字典返回（Python 3.7+ 字典会有序保持）
+        return {label: category_map[label][:10] for label in sorted_labels}
